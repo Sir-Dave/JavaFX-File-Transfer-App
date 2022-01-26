@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="ftp-server1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/ftp-server.jar!/" />
+      <root url="jar://$PROJECT_DIR$/java-json.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/java-json.jar!/" />
+    </SOURCES>
+  </library>
+</component>

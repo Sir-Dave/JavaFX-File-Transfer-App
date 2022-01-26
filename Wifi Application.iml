@@ -7,7 +7,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="lib" level="project" />
-    <orderEntry type="library" name="lib1" level="project" />
+    <orderEntry type="library" name="ftp-server" level="project" />
+    <orderEntry type="library" name="ftp-server1" level="project" />
+    <orderEntry type="library" name="lib3" level="project" />
   </component>
 </module>

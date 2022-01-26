@@ -3,6 +3,8 @@ package com.sirdave;
 import javafx.scene.image.Image;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class Util {
 
@@ -11,7 +13,7 @@ public class Util {
         return new Image(filePath);
     }
 
-    static String generateFilePath(String name) {
-        return new File("resources/" + name).toURI().toString();
+    static URL generateFilePath(String name) throws MalformedURLException {
+        return new File("resources/" + name).toURI().toURL();
     }
 }
