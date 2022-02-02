@@ -85,7 +85,17 @@
                             <Font size="15.0" />
                         </font>
                     </Text>
-                    <Button fx:id="fxStartButton" layoutX="159.0" layoutY="404.0" mnemonicParsing="false" onAction="#startApp" style="-fx-background-color: #333333;" text="Start Server" textFill="WHITE" />
+                    <Button fx:id="fxStartButton" layoutX="10.0"
+                            layoutY="404.0" mnemonicParsing="false"
+                            onAction="#startApp" style="-fx-background-color: #333333;"
+                            text="Start Server" textFill="WHITE" />
+
+                    <Button fx:id="fxSendFileButton" layoutX="250.0"
+                            layoutY="404.0" mnemonicParsing="false"
+                            onAction="#openFileDialog" style="-fx-background-color: #333333;"
+                            text="Send Files" textFill="WHITE" />
+
+
                 </children>
             </Pane>
         </children>

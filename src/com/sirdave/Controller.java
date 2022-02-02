@@ -1,21 +1,23 @@
 package com.sirdave;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.text.Text;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
+
     @FXML
     private Text fxIpAddress;
 
@@ -34,103 +36,21 @@ public class Controller implements Initializable {
     @FXML
     private Button fxStartButton;
 
+    @FXML
+    private Button fxSendFileButton;
+
     private ServerSocket serverSocket = null;
+    private Socket socket;
     private int port;
-    private DataOutputStream dOutputStream;
-    private OutputStreamWriter outputStreamWriter;
-    private ObjectOutputStream objectOutputStream;
-    String FILE_REQUEST = "::1";
-    String BROWSE_REQUEST = "::2";
-    String FILE_REQUEST_FTP = "::3";
-    final static int BUFFER_SIZE = 1024 * 20;
-    final static int BUFFER_SIZE_FTP = 8 * 1024;
-    private static boolean STOP_REQUEST = false;
+    DataOutputStream dataOutputStream;
+    DataInputStream dataInputStream;
 
-    private void browseFiles(String rootPath) {
-        File[] files;
-
-        if (rootPath.equals("root")) {
-            files = File.listRoots();
-        } else {
-            File f = new File(rootPath);
-            files = f.listFiles();
-        }
-
-        // ArrayList<JSONObject> fileList = new ArrayList<>();
-        JSONArray fileList = new JSONArray();
-
-        String fileType;
-        long size;
-
-        for (File f : files) {
-            if (f.isDirectory()) {
-                if (rootPath.equals("root")) {
-                    fileType = "drive";
-                } else
-                    fileType = "dir";
-                size = 0;
-            } else {
-                fileType = "file";
-                size = f.length();
-            }
-
-            JSONObject newFile = new JSONObject();
-
-            try {
-                if (rootPath.equals("root")) {
-                    newFile.put("name", f.getPath());
-                }
-                else {
-                    newFile.put("name", f.getName());
-                }
-                newFile.put("type", fileType);
-                newFile.put("path", f.getPath());
-                newFile.put("size", size);
-
-                fileList.put(newFile);
-
-
-            } catch (JSONException e) {
-                fxLog.appendText("Problem in packing JSON");
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            PrintWriter printWriter = new PrintWriter(dOutputStream);
-            printWriter.print(fileList.toString()+"\n");
-            printWriter.flush();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        fxLog.appendText("File List Sent.\n");
-    }
-
-    private void sendFile(String filePath) throws IOException {
-        File file = new File(filePath);
-
-        fxLog.appendText("Starting Transmission...\n");
-        FileInputStream fis = new FileInputStream(file);
-        byte[] buffer = new byte[BUFFER_SIZE];
-
-        while (fis.read(buffer) > 0) {
-            dOutputStream.write(buffer);
-        }
-
-        fxLog.appendText("Transmission Successful\n");
-    }
+    public Controller() {}
 
     @FXML
-    void startApp(ActionEvent event) {
+    void startApp() {
         if (serverSocket == null) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    STOP_REQUEST = false;
-                    startServer();
-                }
-            };
+            Runnable runnable = this::startServer;
 
             Thread t = new Thread(runnable);
             t.setDaemon(true);
@@ -138,26 +58,20 @@ public class Controller implements Initializable {
 
             fxStartButton.setText("Stop Server");
         } else {
-            STOP_REQUEST = true;
 
             try {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            serverSocket.close();
-                            serverSocket = null;
+                new Thread(() -> {
+                    try {
+                        serverSocket.close();
+                        serverSocket = null;
 
-                            Platform.runLater(() -> {
-                                fxServerStatus.setText("Stopped");
-                            });
+                        Platform.runLater(() -> fxServerStatus.setText("Stopped"));
 
-                            fxLog.setText("");
-                            fxIpAddress.setText("");
-                            fxPort.setText("");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        fxLog.setText("");
+                        fxIpAddress.setText("");
+                        fxPort.setText("");
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }).start();
 
@@ -188,8 +102,7 @@ public class Controller implements Initializable {
         }
 
 
-
-        while (serverSocket != null && !STOP_REQUEST) {
+        while (serverSocket != null) {
             try {
 
                 Platform.runLater(() -> {
@@ -202,78 +115,29 @@ public class Controller implements Initializable {
                     }
                 });
 
-                Socket socket = serverSocket.accept();
+                socket = serverSocket.accept();
 
                 Platform.runLater(() -> {
                     fxLog.appendText("Connected to client >> " + socket.getInetAddress() + "\n");
                     fxMobileConnected.setText("Connected");;
                 });
 
-                dOutputStream = new DataOutputStream(socket.getOutputStream());
+                dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-                DataInputStream dInputStream = new DataInputStream(socket.getInputStream());
+                dataInputStream = new DataInputStream(socket.getInputStream());
+                //receiveFileFromClient();
 
-                String msg = "";
+                /**Platform.runLater(() -> {
+                    fxMobileConnected.setText("Disonnected\n");
+                    fxLog.appendText("Socket connection closed\n");
+                });*/
 
-                try {
-                    msg = dInputStream.readUTF();
-
-                    String action = msg.substring(0, 3);
-                    String filePath = msg.substring(3); // 0:3 --> Action Codes
-
-                    if (action.equals(FILE_REQUEST)) {
-                        sendFile(filePath);
-                    } else if (action.equals(BROWSE_REQUEST)) {
-                        browseFiles(filePath);
-                    } else if(action.equals(FILE_REQUEST_FTP)) {
-
-                        int lastSlash = filePath.lastIndexOf("\\"); //CAUTION
-
-                        String dirToFTP = filePath.substring(0, lastSlash);
-
-                        Integer FTP_PORT = 7270;
-                        FTPServerHandler ftpServerHandler = new FTPServerHandler(FTP_PORT,
-                                "admin",
-                                "admin".toCharArray(),
-                                dirToFTP);
-
-                        boolean serverStatus = ftpServerHandler.startServer();
-
-                        if (serverStatus) {
-                            // Writing status On Ouput Stream
-                            dOutputStream.writeUTF(String.valueOf(FTP_PORT));
-
-                            String downloadResponse = dInputStream.readUTF();
-
-                            Platform.runLater(() -> {
-                                fxLog.appendText("FTP Sending Completed: " + downloadResponse + "\n");
-                            });
-                        }
-
-                        ftpServerHandler.stopServer();
-
-                        Platform.runLater(() -> {
-                            fxLog.appendText("FTP Server closed\n");
-                            fxMobileConnected.setText("Disonnected\n");
-                            fxLog.appendText("Socket connection closed\n");
-                        });
-
-                    }
-                } catch (Exception e) {
-                    Platform.runLater(() -> {
-                        fxMobileConnected.setText("Disonnected\n");
-                        fxLog.appendText("Socket connection closed\n");
-                    });
-                    msg = "-exit";
-                    e.printStackTrace();
-                }
-
-                socket.close();
+                /* socket.close();
 
                 Platform.runLater(() -> {
                     fxLog.appendText("Connection Closed\n");
                     fxMobileConnected.setText("Disconnected");
-                });
+                });*/
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -286,6 +150,68 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         fxLog.setEditable(false);
         fxLog.setWrapText(true);
+    }
 
+    public void sendFileToClient(File file){
+        try {
+            FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
+            String fileName = file.getName();
+            System.out.println("File name is " + fileName);
+
+            byte[] fileNameBytes = fileName.getBytes();
+            byte[] fileContentBytes = new byte[(int) file.length()];
+
+            int num = fileInputStream.read(fileContentBytes);
+            dataOutputStream.writeInt(fileNameBytes.length);
+            dataOutputStream.write(fileNameBytes);
+
+            dataOutputStream.writeInt(fileContentBytes.length);
+            dataOutputStream.write(fileContentBytes);
+        }
+        catch (IOException exception){
+            exception.printStackTrace();
+        }
+    }
+
+    public void receiveFileFromClient(){
+        new Thread(() -> {
+            while (socket.isConnected()){
+                File file = showDownloadFileDialog();
+                try {
+                    int fileNameLength = dataInputStream.readInt();
+                    if (fileNameLength > 0) {
+                        byte[] fileNameBytes = new byte[fileNameLength];
+                        dataInputStream.readFully(fileNameBytes, 0, fileNameBytes.length);
+                        int fileContentLength = dataInputStream.readInt();
+                        if (fileContentLength > 0) {
+                            byte[] fileContentBytes = new byte[fileContentLength];
+                            dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
+                            Files.copy(dataInputStream, file.getAbsoluteFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    }
+                }
+                catch (IOException exception){
+                    exception.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+
+    @FXML
+    public void openFileDialog() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Select a file");
+        File file = chooser.showOpenDialog(fxSendFileButton.getScene().getWindow());
+        sendFileToClient(file);
+    }
+
+
+    public File showDownloadFileDialog(){
+        DirectoryChooser dirChooser = new DirectoryChooser();
+        dirChooser.setTitle("Select a folder");
+        //String selectedDirPath = dirChooser.showDialog(mainApp.getPrimaryStage()).getAbsolutePath();
+        //File downloadedFile = new File(selectedDirPath + "/" + downloadedFileName);
+        return dirChooser.showDialog(new Stage());
     }
 }
