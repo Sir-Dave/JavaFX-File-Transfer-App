@@ -42,8 +42,11 @@ public class Controller implements Initializable {
     private ServerSocket serverSocket = null;
     private Socket socket;
     private int port;
-    DataOutputStream dataOutputStream;
-    DataInputStream dataInputStream;
+
+    //DataOutputStream dataOutputStream;
+    //DataInputStream dataInputStream;
+    ObjectOutputStream outputStream;
+    ObjectInputStream inputStream;
 
     public Controller() {}
 
@@ -122,9 +125,11 @@ public class Controller implements Initializable {
                     fxMobileConnected.setText("Connected");;
                 });
 
-                dataOutputStream = new DataOutputStream(socket.getOutputStream());
+                //dataOutputStream = new DataOutputStream(socket.getOutputStream());
+                //dataInputStream = new DataInputStream(socket.getInputStream());
 
-                dataInputStream = new DataInputStream(socket.getInputStream());
+                inputStream = new ObjectInputStream(socket.getInputStream());
+                outputStream = new ObjectOutputStream(socket.getOutputStream());
                 //receiveFileFromClient();
 
                 /**Platform.runLater(() -> {
@@ -161,19 +166,25 @@ public class Controller implements Initializable {
             byte[] fileNameBytes = fileName.getBytes();
             byte[] fileContentBytes = new byte[(int) file.length()];
 
-            int num = fileInputStream.read(fileContentBytes);
+            MyFile myFile = new MyFile(fileName, fileContentBytes);
+
+            outputStream.writeObject(myFile);
+            outputStream.flush();
+
+            /*int num = fileInputStream.read(fileContentBytes);
             dataOutputStream.writeInt(fileNameBytes.length);
             dataOutputStream.write(fileNameBytes);
 
             dataOutputStream.writeInt(fileContentBytes.length);
             dataOutputStream.write(fileContentBytes);
+            dataOutputStream.flush();*/
         }
         catch (IOException exception){
             exception.printStackTrace();
         }
     }
 
-    public void receiveFileFromClient(){
+    /**public void receiveFileFromClient(){
         new Thread(() -> {
             while (socket.isConnected()){
                 File file = showDownloadFileDialog();
@@ -195,7 +206,7 @@ public class Controller implements Initializable {
                 }
             }
         }).start();
-    }
+    }*/
 
 
     @FXML
