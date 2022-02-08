@@ -12,8 +12,6 @@ import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.*;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -43,10 +41,8 @@ public class Controller implements Initializable {
     private Socket socket;
     private int port;
 
-    //DataOutputStream dataOutputStream;
-    //DataInputStream dataInputStream;
-    ObjectOutputStream outputStream;
-    ObjectInputStream inputStream;
+    DataOutputStream dataOutputStream;
+    DataInputStream dataInputStream;
 
     public Controller() {}
 
@@ -125,11 +121,10 @@ public class Controller implements Initializable {
                     fxMobileConnected.setText("Connected");;
                 });
 
-                //dataOutputStream = new DataOutputStream(socket.getOutputStream());
-                //dataInputStream = new DataInputStream(socket.getInputStream());
+                dataOutputStream = new DataOutputStream(socket.getOutputStream());
+                dataInputStream = new DataInputStream(socket.getInputStream());
 
-                inputStream = new ObjectInputStream(socket.getInputStream());
-                outputStream = new ObjectOutputStream(socket.getOutputStream());
+
                 //receiveFileFromClient();
 
                 /**Platform.runLater(() -> {
@@ -166,18 +161,13 @@ public class Controller implements Initializable {
             byte[] fileNameBytes = fileName.getBytes();
             byte[] fileContentBytes = new byte[(int) file.length()];
 
-            MyFile myFile = new MyFile(fileName, fileContentBytes);
-
-            outputStream.writeObject(myFile);
-            outputStream.flush();
-
-            /*int num = fileInputStream.read(fileContentBytes);
+            int num = fileInputStream.read(fileContentBytes);
             dataOutputStream.writeInt(fileNameBytes.length);
             dataOutputStream.write(fileNameBytes);
 
             dataOutputStream.writeInt(fileContentBytes.length);
             dataOutputStream.write(fileContentBytes);
-            dataOutputStream.flush();*/
+            dataOutputStream.flush();
         }
         catch (IOException exception){
             exception.printStackTrace();
