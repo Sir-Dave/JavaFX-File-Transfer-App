@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.*;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -124,20 +125,7 @@ public class Controller implements Initializable {
                 dataOutputStream = new DataOutputStream(socket.getOutputStream());
                 dataInputStream = new DataInputStream(socket.getInputStream());
 
-
                 //receiveFileFromClient();
-
-                /**Platform.runLater(() -> {
-                    fxMobileConnected.setText("Disonnected\n");
-                    fxLog.appendText("Socket connection closed\n");
-                });*/
-
-                /* socket.close();
-
-                Platform.runLater(() -> {
-                    fxLog.appendText("Connection Closed\n");
-                    fxMobileConnected.setText("Disconnected");
-                });*/
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -152,22 +140,24 @@ public class Controller implements Initializable {
         fxLog.setWrapText(true);
     }
 
-    public void sendFileToClient(File file){
+    public void sendFilesToClient(List<File> files){
         try {
-            FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
-            String fileName = file.getName();
-            System.out.println("File name is " + fileName);
+            for (File file: files){
+                FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
+                String fileName = file.getName();
+                System.out.println("File name is " + fileName);
 
-            byte[] fileNameBytes = fileName.getBytes();
-            byte[] fileContentBytes = new byte[(int) file.length()];
+                byte[] fileNameBytes = fileName.getBytes();
+                byte[] fileContentBytes = new byte[(int) file.length()];
 
-            int num = fileInputStream.read(fileContentBytes);
-            dataOutputStream.writeInt(fileNameBytes.length);
-            dataOutputStream.write(fileNameBytes);
+                int num = fileInputStream.read(fileContentBytes);
+                dataOutputStream.writeInt(fileNameBytes.length);
+                dataOutputStream.write(fileNameBytes);
 
-            dataOutputStream.writeInt(fileContentBytes.length);
-            dataOutputStream.write(fileContentBytes);
-            dataOutputStream.flush();
+                dataOutputStream.writeInt(fileContentBytes.length);
+                dataOutputStream.write(fileContentBytes);
+                dataOutputStream.flush();
+            }
         }
         catch (IOException exception){
             exception.printStackTrace();
@@ -202,9 +192,9 @@ public class Controller implements Initializable {
     @FXML
     public void openFileDialog() {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Select a file");
-        File file = chooser.showOpenDialog(fxSendFileButton.getScene().getWindow());
-        sendFileToClient(file);
+        chooser.setTitle("Select files to send");
+        List<File> files = chooser.showOpenMultipleDialog(fxSendFileButton.getScene().getWindow());
+        sendFilesToClient(files);
     }
 
 
