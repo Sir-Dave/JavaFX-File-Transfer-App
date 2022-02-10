@@ -125,7 +125,7 @@ public class Controller implements Initializable {
                 dataOutputStream = new DataOutputStream(socket.getOutputStream());
                 dataInputStream = new DataInputStream(socket.getInputStream());
 
-                //receiveFileFromClient();
+                receiveFileFromClient();
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -164,20 +164,21 @@ public class Controller implements Initializable {
         }
     }
 
-    /**public void receiveFileFromClient(){
+    public void receiveFileFromClient(){
         new Thread(() -> {
-            while (socket.isConnected()){
-                File file = showDownloadFileDialog();
+            while (true){
                 try {
                     int fileNameLength = dataInputStream.readInt();
                     if (fileNameLength > 0) {
                         byte[] fileNameBytes = new byte[fileNameLength];
-                        dataInputStream.readFully(fileNameBytes, 0, fileNameBytes.length);
+                        dataInputStream.readFully(fileNameBytes, 0, fileNameLength);
+                        String filename = new String(fileNameBytes);
+
                         int fileContentLength = dataInputStream.readInt();
                         if (fileContentLength > 0) {
                             byte[] fileContentBytes = new byte[fileContentLength];
                             dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
-                            Files.copy(dataInputStream, file.getAbsoluteFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            downloadFile(filename, fileContentBytes);
                         }
                     }
                 }
@@ -186,7 +187,22 @@ public class Controller implements Initializable {
                 }
             }
         }).start();
-    }*/
+    }
+
+    //TODO: Get download folder from user and save files here
+    private void downloadFile(String fileName, byte[] fileContent) {
+       try{
+           File file = new File(""); // Save file here
+           //File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName)
+           FileOutputStream fileOutputStream = new FileOutputStream(file);
+           fileOutputStream.write(fileContent);
+           fileOutputStream.close();
+           System.out.println("File " + file + " received");
+       }
+       catch (IOException ex){
+           ex.printStackTrace();
+       }
+    }
 
 
     @FXML
