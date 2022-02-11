@@ -41,7 +41,6 @@ public class Controller implements Initializable {
     private ServerSocket serverSocket = null;
     private Socket socket;
     private int port;
-
     DataOutputStream dataOutputStream;
     DataInputStream dataInputStream;
 
@@ -101,8 +100,7 @@ public class Controller implements Initializable {
             e.printStackTrace();
         }
 
-
-        while (serverSocket != null) {
+        while (serverSocket!= null) {
             try {
 
                 Platform.runLater(() -> {
@@ -122,12 +120,15 @@ public class Controller implements Initializable {
                     fxMobileConnected.setText("Connected");;
                 });
 
-                dataOutputStream = new DataOutputStream(socket.getOutputStream());
                 dataInputStream = new DataInputStream(socket.getInputStream());
+                dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-                receiveFileFromClient();
+                /** Calling this class causes the EOF exception */
+                MyThread myThread = new MyThread();
+                new Thread(myThread).start();
 
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -164,29 +165,36 @@ public class Controller implements Initializable {
         }
     }
 
-    public void receiveFileFromClient(){
-        new Thread(() -> {
-            while (true){
-                try {
-                    int fileNameLength = dataInputStream.readInt();
-                    if (fileNameLength > 0) {
-                        byte[] fileNameBytes = new byte[fileNameLength];
-                        dataInputStream.readFully(fileNameBytes, 0, fileNameLength);
-                        String filename = new String(fileNameBytes);
+    class MyThread implements Runnable{
 
-                        int fileContentLength = dataInputStream.readInt();
-                        if (fileContentLength > 0) {
-                            byte[] fileContentBytes = new byte[fileContentLength];
-                            dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
-                            downloadFile(filename, fileContentBytes);
-                        }
+        @Override
+        public void run() {
+            receiveFileFromClient();
+        }
+    }
+
+    public void receiveFileFromClient(){
+        while (true){
+            try {
+                int fileNameLength = dataInputStream.readInt();
+                if (fileNameLength > 0) {
+                    byte[] fileNameBytes = new byte[fileNameLength];
+                    dataInputStream.readFully(fileNameBytes, 0, fileNameLength);
+                    String filename = new String(fileNameBytes);
+
+                    int fileContentLength = dataInputStream.readInt();
+                    if (fileContentLength > 0) {
+                        byte[] fileContentBytes = new byte[fileContentLength];
+                        dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
+                        System.out.println("File name received is " + filename);
+                        //downloadFile(filename, fileContentBytes);
                     }
                 }
-                catch (IOException exception){
-                    exception.printStackTrace();
-                }
             }
-        }).start();
+            catch (IOException exception){
+                exception.printStackTrace();
+            }
+        }
     }
 
     //TODO: Get download folder from user and save files here
@@ -211,14 +219,5 @@ public class Controller implements Initializable {
         chooser.setTitle("Select files to send");
         List<File> files = chooser.showOpenMultipleDialog(fxSendFileButton.getScene().getWindow());
         sendFilesToClient(files);
-    }
-
-
-    public File showDownloadFileDialog(){
-        DirectoryChooser dirChooser = new DirectoryChooser();
-        dirChooser.setTitle("Select a folder");
-        //String selectedDirPath = dirChooser.showDialog(mainApp.getPrimaryStage()).getAbsolutePath();
-        //File downloadedFile = new File(selectedDirPath + "/" + downloadedFileName);
-        return dirChooser.showDialog(new Stage());
     }
 }
