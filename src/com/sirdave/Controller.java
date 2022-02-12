@@ -44,6 +44,7 @@ public class Controller implements Initializable {
     private int port;
     DataOutputStream dataOutputStream;
     DataInputStream dataInputStream;
+    String folderName;
 
     public Controller() {}
 
@@ -139,6 +140,7 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         fxLog.setEditable(false);
         fxLog.setWrapText(true);
+        folderName = getDownloadPath();
     }
 
     public void sendFilesToClient(List<File> files){
@@ -146,7 +148,7 @@ public class Controller implements Initializable {
             for (File file: files){
                 FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
                 String fileName = file.getName();
-                System.out.println("File sent is " + fileName);
+                System.out.println("File " + fileName + " sent");
 
                 byte[] fileNameBytes = fileName.getBytes();
                 byte[] fileContentBytes = new byte[(int) file.length()];
@@ -176,6 +178,7 @@ public class Controller implements Initializable {
     public void receiveFilesFromClient(){
         try {
             int fileCount = dataInputStream.readInt();
+
             for (int i = 0; i < fileCount; ++i) {
                 String filename;
                 byte[] fileContentBytes;
@@ -185,15 +188,14 @@ public class Controller implements Initializable {
                     byte[] fileNameBytes = new byte[fileNameLength];
                     dataInputStream.readFully(fileNameBytes, 0, fileNameLength);
                     filename = new String(fileNameBytes, StandardCharsets.UTF_8);
-                    System.out.println("File name received is " + filename);
-                }
 
-                int fileContentLength = dataInputStream.readInt();
-                if (fileContentLength > 0) {
-                    fileContentBytes = new byte[fileContentLength];
-                    dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
+                    int fileContentLength = dataInputStream.readInt();
+                    if (fileContentLength > 0) {
+                        fileContentBytes = new byte[fileContentLength];
+                        dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
+                        downloadFile(folderName, filename, fileContentBytes);
+                    }
                 }
-                //downloadFile(filename, fileContentBytes);
             }
         }
         catch (IOException exception){
@@ -201,11 +203,17 @@ public class Controller implements Initializable {
         }
     }
 
-    //TODO: Get download folder from user and save files here
-    private void downloadFile(String fileName, byte[] fileContent) {
+    @FXML
+    private String getDownloadPath(){
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File directory = directoryChooser.showDialog(new Stage());
+        return directory.getAbsolutePath();
+    }
+
+
+    private void downloadFile(String folderName, String fileName, byte[] fileContent) {
        try{
-           File file = new File(""); // Save file here
-           //File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName)
+           File file = new File(folderName, fileName);
            FileOutputStream fileOutputStream = new FileOutputStream(file);
            fileOutputStream.write(fileContent);
            fileOutputStream.close();
