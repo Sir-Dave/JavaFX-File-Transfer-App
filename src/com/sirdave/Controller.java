@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -123,7 +124,6 @@ public class Controller implements Initializable {
                 dataInputStream = new DataInputStream(socket.getInputStream());
                 dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-                /** Calling this class causes the EOF exception */
                 MyThread myThread = new MyThread();
                 new Thread(myThread).start();
 
@@ -146,7 +146,7 @@ public class Controller implements Initializable {
             for (File file: files){
                 FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
                 String fileName = file.getName();
-                System.out.println("File name is " + fileName);
+                System.out.println("File sent is " + fileName);
 
                 byte[] fileNameBytes = fileName.getBytes();
                 byte[] fileContentBytes = new byte[(int) file.length()];
@@ -169,31 +169,35 @@ public class Controller implements Initializable {
 
         @Override
         public void run() {
-            receiveFileFromClient();
+            receiveFilesFromClient();
         }
     }
 
-    public void receiveFileFromClient(){
-        while (true){
-            try {
+    public void receiveFilesFromClient(){
+        try {
+            int fileCount = dataInputStream.readInt();
+            for (int i = 0; i < fileCount; ++i) {
+                String filename;
+                byte[] fileContentBytes;
+
                 int fileNameLength = dataInputStream.readInt();
                 if (fileNameLength > 0) {
                     byte[] fileNameBytes = new byte[fileNameLength];
                     dataInputStream.readFully(fileNameBytes, 0, fileNameLength);
-                    String filename = new String(fileNameBytes);
-
-                    int fileContentLength = dataInputStream.readInt();
-                    if (fileContentLength > 0) {
-                        byte[] fileContentBytes = new byte[fileContentLength];
-                        dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
-                        System.out.println("File name received is " + filename);
-                        //downloadFile(filename, fileContentBytes);
-                    }
+                    filename = new String(fileNameBytes, StandardCharsets.UTF_8);
+                    System.out.println("File name received is " + filename);
                 }
+
+                int fileContentLength = dataInputStream.readInt();
+                if (fileContentLength > 0) {
+                    fileContentBytes = new byte[fileContentLength];
+                    dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
+                }
+                //downloadFile(filename, fileContentBytes);
             }
-            catch (IOException exception){
-                exception.printStackTrace();
-            }
+        }
+        catch (IOException exception){
+            exception.printStackTrace();
         }
     }
 
