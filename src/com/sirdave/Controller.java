@@ -148,8 +148,7 @@ public class Controller implements Initializable {
             for (File file: files){
                 FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
                 String fileName = file.getName();
-                System.out.println("File " + fileName + " sent");
-
+                Platform.runLater(() -> fxLog.appendText("File " + fileName + " sent\n"));
                 byte[] fileNameBytes = fileName.getBytes();
                 byte[] fileContentBytes = new byte[(int) file.length()];
 
@@ -217,7 +216,7 @@ public class Controller implements Initializable {
            FileOutputStream fileOutputStream = new FileOutputStream(file);
            fileOutputStream.write(fileContent);
            fileOutputStream.close();
-           System.out.println("File " + file + " received");
+           Platform.runLater(() -> fxLog.appendText("File saved to " + file + "\n"));
        }
        catch (IOException ex){
            ex.printStackTrace();
