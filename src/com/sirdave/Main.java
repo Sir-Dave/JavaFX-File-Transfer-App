@@ -4,20 +4,21 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
-import static com.sirdave.Util.generateFilePath;
-import static com.sirdave.Util.generateImage;
 
 public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(generateFilePath("/sample.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/com/sirdave/sample.fxml"));
         primaryStage.setTitle("File Transfer App");
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(root, 700, 450));
-        primaryStage.getIcons().add(generateImage("icon.png"));
+        String file = getClass().getResource("/com/sirdave/icon.png").toString();
+        Image image = new Image(file);
+        primaryStage.getIcons().add(image);
         primaryStage.requestFocus();
         primaryStage.show();
     }
