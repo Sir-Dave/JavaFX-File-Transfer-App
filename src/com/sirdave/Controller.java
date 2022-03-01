@@ -9,7 +9,6 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -163,7 +162,6 @@ public class Controller implements Initializable {
                     dataOutputStream.flush();
                 }
                 fileInputStream.close();
-                //dataOutputStream.close();
                 Platform.runLater(() -> fxLog.appendText("File " + file.getName() + " sent\n"));
             }
         }
@@ -182,9 +180,7 @@ public class Controller implements Initializable {
 
     public void receiveFilesFromClient(){
         try {
-            int fileCount = dataInputStream.readInt();
-
-            for (int i = 0; i < fileCount; i++) {
+            while (true){
                 String filename;
 
                 int fileNameLength = dataInputStream.readInt();
