@@ -147,18 +147,24 @@ public class Controller implements Initializable {
         try {
             for (File file: files){
                 FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
-                String fileName = file.getName();
-                Platform.runLater(() -> fxLog.appendText("File " + fileName + " sent\n"));
-                byte[] fileNameBytes = fileName.getBytes();
-                byte[] fileContentBytes = new byte[(int) file.length()];
+                byte[] bytesIn = new byte[4096];
+                int read;
 
-                int num = fileInputStream.read(fileContentBytes);
+                // send file name
+                byte[] fileNameBytes = file.getName().getBytes();
                 dataOutputStream.writeInt(fileNameBytes.length);
                 dataOutputStream.write(fileNameBytes);
 
-                dataOutputStream.writeInt(fileContentBytes.length);
-                dataOutputStream.write(fileContentBytes);
-                dataOutputStream.flush();
+                // send file size
+                dataOutputStream.writeLong(file.length());
+
+                while ((read = fileInputStream.read(bytesIn)) != -1) {
+                    dataOutputStream.write(bytesIn, 0, read);
+                    dataOutputStream.flush();
+                }
+                fileInputStream.close();
+                //dataOutputStream.close();
+                Platform.runLater(() -> fxLog.appendText("File " + file.getName() + " sent\n"));
             }
         }
         catch (IOException exception){
@@ -178,9 +184,8 @@ public class Controller implements Initializable {
         try {
             int fileCount = dataInputStream.readInt();
 
-            for (int i = 0; i < fileCount; ++i) {
+            for (int i = 0; i < fileCount; i++) {
                 String filename;
-                byte[] fileContentBytes;
 
                 int fileNameLength = dataInputStream.readInt();
                 if (fileNameLength > 0) {
@@ -188,12 +193,20 @@ public class Controller implements Initializable {
                     dataInputStream.readFully(fileNameBytes, 0, fileNameLength);
                     filename = new String(fileNameBytes, StandardCharsets.UTF_8);
 
-                    int fileContentLength = dataInputStream.readInt();
-                    if (fileContentLength > 0) {
-                        fileContentBytes = new byte[fileContentLength];
-                        dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
-                        downloadFile(folderName, filename, fileContentBytes);
+                    int bytes;
+
+                    File file = new File(folderName, filename);
+                    FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+                    long size = dataInputStream.readLong();     // read file size
+                    byte[] buffer = new byte[4096];
+                    while (size > 0 && (bytes = dataInputStream.read(buffer, 0,
+                            (int)Math.min(buffer.length, size))) != -1) {
+                        fileOutputStream.write(buffer,0,bytes);
+                        size -= bytes;      // read up to file size
                     }
+                    fileOutputStream.close();
+                    Platform.runLater(() -> fxLog.appendText("File saved to " + file + "\n"));
                 }
             }
         }
@@ -207,20 +220,6 @@ public class Controller implements Initializable {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         File directory = directoryChooser.showDialog(new Stage());
         return directory.getAbsolutePath();
-    }
-
-
-    private void downloadFile(String folderName, String fileName, byte[] fileContent) {
-       try{
-           File file = new File(folderName, fileName);
-           FileOutputStream fileOutputStream = new FileOutputStream(file);
-           fileOutputStream.write(fileContent);
-           fileOutputStream.close();
-           Platform.runLater(() -> fxLog.appendText("File saved to " + file + "\n"));
-       }
-       catch (IOException ex){
-           ex.printStackTrace();
-       }
     }
 
 

@@ -3,8 +3,6 @@
     <output-path>$PROJECT_DIR$/out/artifacts/Wifi_Application_jar</output-path>
     <root id="archive" name="Wifi Application.jar">
       <element id="module-output" name="Wifi Application" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/ftp-server.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/java-json.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/Documents/Projects/In Progress/Wifi-Application/javafx-sdk-17.0.2/lib/javafx-swt.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/Documents/Projects/In Progress/Wifi-Application/javafx-sdk-17.0.2/lib/javafx.web.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/Documents/Projects/In Progress/Wifi-Application/javafx-sdk-17.0.2/lib/javafx.base.jar" path-in-jar="/" />
@@ -13,7 +11,8 @@
       <element id="extracted-dir" path="$USER_HOME$/Documents/Projects/In Progress/Wifi-Application/javafx-sdk-17.0.2/lib/javafx.swing.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/Documents/Projects/In Progress/Wifi-Application/javafx-sdk-17.0.2/lib/javafx.controls.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/Documents/Projects/In Progress/Wifi-Application/javafx-sdk-17.0.2/lib/javafx.graphics.jar" path-in-jar="/" />
-      <element id="library" level="project" name="ftp-server" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/ftp-server.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/java-json.jar" path-in-jar="/" />
       <element id="file-copy" path="$USER_HOME$/Documents/Projects/In Progress/Wifi-Application/javafx-sdk-17.0.2/lib/libavplugin-54.so" />
       <element id="file-copy" path="$USER_HOME$/Documents/Projects/In Progress/Wifi-Application/javafx-sdk-17.0.2/lib/libavplugin-56.so" />
       <element id="file-copy" path="$USER_HOME$/Documents/Projects/In Progress/Wifi-Application/javafx-sdk-17.0.2/lib/libavplugin-57.so" />
